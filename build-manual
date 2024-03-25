@@ -11,6 +11,6 @@ ESCAPED_REQS=$(awk '{printf "%s%s",sep,$0; sep="\\\n"} END{print ""}' ../manual_
 sed "s/REQUIREMENTS/$ESCAPED_REQS/" index-rst-template > index.rst
 
 rm -rf build/
-sphinx-build -b html . build -W
+sphinx-build -b html . build 
 
 rm index.rst

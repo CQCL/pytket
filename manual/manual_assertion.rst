@@ -11,11 +11,11 @@ This property can be potentially exploited to help error mitigation or nondeterm
 The former can be used to assert arbitrary subspaces, but note that we currently only support 2x2, 4x4, and 8x8 matrices.
 The latter is useful for asserting that the prepared state lies in a subspace spanned by some stabiliser states.
 
-When applied to a circuit, the assertion is inserted as a :py:class:`ProjectorAssertionBox` or a :py:class:`StabiliserAssertionBox`, and then synthesized into a set of gates and measurements by the :py:class:`DecomposeBoxes` pass. Be aware that an ancilla qubit might be required for the assertion.
+When applied to a circuit, the assertion is inserted as a :py:class:`~pytket.circuit.ProjectorAssertionBox` or a :py:class:`~pytket.circuit.StabiliserAssertionBox`, and then synthesized into a set of gates and measurements by the :py:class:`~pytket.passes.DecomposeBoxes` pass. Be aware that an ancilla qubit might be required for the assertion.
 The results of these measurements will be used later on to determine the outcome of the assertion.
 
-To test the circuit, compile and process the circuit using a :py:class:`Backend` that supports mid-circuit measurement and reset (e.g. :py:class:`AerBackend` from ``pytket-qiskit``).
-Once a :py:class:`BackendResult` object is retrieved, the outcome of the assertion can be checked with the :py:meth:`get_debug_info` method.
+To test the circuit, compile and process the circuit using a :py:class:`~pytket.backends.Backend` that supports mid-circuit measurement and reset (e.g. :py:class:`~pytket.extensions.qiskit.AerBackend` from ``pytket-qiskit``).
+Once a :py:class:`~pytket.backends.backendresult.BackendResult` object is retrieved, the outcome of the assertion can be checked with the :py:meth:`~pytket.backends.backendresult.BackendResult.get_debug_info` method.
 
 
 Projector-based
@@ -26,7 +26,7 @@ The method implemented in pytket transforms an arbitrary projective measurement 
 However, this approach is not without limitations. Projectors in general require :math:`2^{n} \times 2^{n}` matrices to represent them; hence it becomes impractical when the size of the asserted subspace is large.
 Moreover, the transformation technique we have adapted requires synthesis for arbitrary unitary matrices. Since ``pytket`` currently only supports synthesis for 1, 2, and 3 qubit unitaries, the projectors are limited to 2x2, 4x4, and 8x8 matrices.
 
-To start asserting with a projector, one should first compute the projector matrix for the target subspace. If the rank of the projector is larger than :math:`2^{n-1}` (:math:`n` is the number of qubits), an ancilla qubit should be provided to the :py:meth:`add_assert()` method.
+To start asserting with a projector, one should first compute the projector matrix for the target subspace. If the rank of the projector is larger than :math:`2^{n-1}` (:math:`n` is the number of qubits), an ancilla qubit should be provided to the :py:meth:`~pytket.circuit.Circuit.add_assertion()` method.
 A special unsupported case arises when asserting a 3-qubit subspace whose projector has a rank larger than :math:`2^{3-1}`.
 
 In the following example, we try to prepare a Bell state along with a state obtained by applying an :math:`\mathrm{Rx}(0.3)` rotation to :math:`|0\rangle`; we then use projectors to assert that the circuit construction is correct.
@@ -70,7 +70,7 @@ In the following example, we try to prepare a Bell state along with a state obta
     re.get_debug_info()
 
 Without the presence of noise, if a state is in the target subspace, then its associated assertion will succeed with certainty; on the other hand, an assertion failure indicates that the state is not in the target subspace.
-In order to really test the program, the debug circuit should be run multiple times to ensure an accurate conclusion. The :py:class:`dict` object returned by :py:meth:`get_debug_info` suggests that the Bell state assertion succeeded for all the 100 shots; hence we are confident that the construction for the Bell state is correct.
+In order to really test the program, the debug circuit should be run multiple times to ensure an accurate conclusion. The :py:class:`dict` object returned by :py:meth:`~pytket.backends.backendresult.BackendResult.get_debug_info` suggests that the Bell state assertion succeeded for all the 100 shots; hence we are confident that the construction for the Bell state is correct.
 On the contrary, the assertion named "Rx(0.3)|0>" failed for some shots; this means that the construction for that state is incorrect.
 
 If there is noise in the device, which is the case for all devices in the NISQ era, then the results can be much less clear. The following example demonstrates what the assertion outcome will look like if we compile and run the debug circuit with a noisy backend.
@@ -147,7 +147,7 @@ The following code demonstrates how we use the generating set for the Bell state
     res.get_debug_info()
 
 
-A :py:class:`StabiliserAssertionBox` can also be constructed with a :py:class:`pytket.pauli.PauliStabiliser`:
+A :py:class:`~pytket.circuit.StabiliserAssertionBox` can also be constructed with a :py:class:`~pytket.pauli.PauliStabiliser`:
 
 .. jupyter-execute::
 

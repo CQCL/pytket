@@ -2,17 +2,17 @@
 Compilation
 ***********
 
-So far, we have already covered enough to be able to design the :py:class:`Circuit` s we want to run, submit them to a :py:class:`Backend`, and interpret the results in a meaningful way. This is all you need if you want to just try out a quantum computer, run some toy examples and observe some basic results. We actually glossed over a key step in this process by using the :py:meth:`Backend.get_compiled_circuit()` method. The compilation step maps from the universal computer abstraction presented at :py:class:`Circuit` construction to the restricted fragment supported by the target :py:class:`Backend`, and knowing what a compiler can do to your program can help reduce the burden of design and improve performance on real devices.
+So far, we have already covered enough to be able to design the :py:class:`~pytket.circuit.Circuit` s we want to run, submit them to a :py:class:`~pytket.backends.Backend`, and interpret the results in a meaningful way. This is all you need if you want to just try out a quantum computer, run some toy examples and observe some basic results. We actually glossed over a key step in this process by using the :py:meth:`~pytket.backends.Backend.get_compiled_circuit()` method. The compilation step maps from the universal computer abstraction presented at :py:class:`~pytket.circuit.Circuit` construction to the restricted fragment supported by the target :py:class:`~pytket.backends.Backend`, and knowing what a compiler can do to your program can help reduce the burden of design and improve performance on real devices.
 
 The necessity of compilation maps over from the world of classical computation: it is much easier to design correct programs when working with higher-level constructions that aren't natively supported, and it shouldn't require a programmer to be an expert in the exact device architecture to achieve good performance. There are many possible low-level implementations on the device for each high-level program, which vary in the time and resources taken to execute. However, because QPUs are analog devices, the implementation can have a massive impact on the quality of the final outcomes as a result of changing how susceptible the system is to noise. Using a good compiler and choosing the methods appropriately can automatically find a better low-level implementation. Each aspect of the compilation procedure is exposed through ``pytket`` to provide users with a way to have full control over what is applied and how.
 
 .. Optimisation/simplification and constraint solving
 
-The primary goals of compilation are two-fold: solving the constraints of the :py:class:`Backend` to get from the abstract model to something runnable, and optimising/simplifying the :py:class:`Circuit` to make it faster, smaller, and less prone to noise. Every step in compilation can generally be split up into one of these two categories (though even the constraint solving steps could have multiple solutions over which we could optimise for noise).
+The primary goals of compilation are two-fold: solving the constraints of the :py:class:`~pytket.backends.Backend` to get from the abstract model to something runnable, and optimising/simplifying the :py:class:`~pytket.circuit.Circuit` to make it faster, smaller, and less prone to noise. Every step in compilation can generally be split up into one of these two categories (though even the constraint solving steps could have multiple solutions over which we could optimise for noise).
 
 .. Passes capture methods of transforming the circuit, acting in place
 
-Each compiler pass inherits from the :py:class:`BasePass` class, capturing a method of transforming a :py:class:`Circuit`. The main functionality is built into the :py:meth:`BasePass.apply()` method, which applies the transformation to a :py:class:`Circuit` in-place. The :py:meth:`Backend.get_compiled_circuit()` method is a wrapper around the :py:meth:`BasePass.apply()` from the :py:class:`Backend` 's recommended pass sequence. This chapter will explore these compiler passes, the different kinds of constraints they are used to solve and optimisations they apply, to help you identify which ones are appropriate for a given task.
+Each compiler pass inherits from the :py:class:`BasePass` class, capturing a method of transforming a :py:class:`~pytket.circuit.Circuit`. The main functionality is built into the :py:meth:`BasePass.apply()` method, which applies the transformation to a :py:class:`~pytket.circuit.Circuit` in-place. The :py:meth:`~pytket.backends.Backend.get_compiled_circuit()` method is a wrapper around the :py:meth:`BasePass.apply()` from the :py:class:`~pytket.backends.Backend` 's recommended pass sequence. This chapter will explore these compiler passes, the different kinds of constraints they are used to solve and optimisations they apply, to help you identify which ones are appropriate for a given task.
 
 Predicates
 ----------
@@ -20,9 +20,9 @@ Predicates
 .. Predicates capture properties a circuit could satisfy
 .. Primarily used to describe requirements of the backends
 
-Solving the constraints of the target :py:class:`Backend` is the essential goal of compilation, so our choice of passes is mostly driven by this set of constraints. We already saw in the last chapter that the :py:attr:`Backend.required_predicates` property gives a collection of :py:class:`Predicate` s, describing the necessary properties a :py:class:`Circuit` must satisfy in order to be run.
+Solving the constraints of the target :py:class:`~pytket.backends.Backend` is the essential goal of compilation, so our choice of passes is mostly driven by this set of constraints. We already saw in the last chapter that the :py:attr:`Backend.required_predicates` property gives a collection of :py:class:`~pytket.predicates.Predicate` s, describing the necessary properties a :py:class:`~pytket.circuit.Circuit` must satisfy in order to be run.
 
-Each :py:class:`Predicate` can be constructed on its own to impose tests on :py:class:`Circuit` s during construction.
+Each :py:class:`~pytket.predicates.Predicate` can be constructed on its own to impose tests on :py:class:`~pytket.circuit.Circuit` s during construction.
 
 .. jupyter-execute::
 
@@ -45,41 +45,41 @@ Each :py:class:`Predicate` can be constructed on its own to impose tests on :py:
 
 .. Common predicates
 
-======================================= =======================================
-Common :py:class:`Predicate`            Constraint
-======================================= =======================================
-:py:class:`GateSetPredicate`           
-                                          Every gate is within a set of allowed
-                                          :py:class:`OpType` s
-:py:class:`ConnectivityPredicate`       
-                                          Every multi-qubit gate acts on
-                                          adjacent qubits according to some
-                                          connectivity graph
-:py:class:`DirectednessPredicate`       
-                                          Extends
-                                          :py:class:`ConnectivityPredicate`
-                                          where ``OpType::CX`` gates are only
-                                          supported in a specific orientation
-                                          between adjacent qubits
-:py:class:`NoClassicalControlPredicate` 
-                                          The :py:class:`Circuit` does not
-                                          contain any gates that act
-                                          conditionally on classical data
-:py:class:`NoMidMeasurePredicate`      
-                                          All ``OpType::Measure`` gates act at
-                                          the end of the :py:class:`Circuit`
-                                          (there are no subsequent gates on
-                                          either the :py:class:`Qubit` measured
-                                          or the :py:class:`Bit` written to)
-======================================= =======================================
+==========================================================  =====================================================
+Common :py:class:`~pytket.predicates.Predicate`              Constraint
+==========================================================  =====================================================
+:py:class:`~pytket.predicates.GateSetPredicate`                 
+                                                             Every gate is within a set of allowed
+                                                             :py:class:`~pytket.circuit.OpType` s
+:py:class:`~pytket.predicates.ConnectivityPredicate`             
+                                                             Every multi-qubit gate acts on
+                                                             adjacent qubits according to some
+                                                             connectivity graph
+:py:class:`~pytket.predicates.DirectednessPredicate`                            
+                                                             Extends
+                                                             :py:class:`~pytket.predicates.ConnectivityPredicate`
+                                                             where ``OpType.CX`` gates are only
+                                                             supported in a specific orientation
+                                                             between adjacent qubits
+:py:class:`~pytket.predicates.NoClassicalControlPredicate`  
+                                                            The :py:class:`~pytket.circuit.Circuit` does not
+                                                            contain any gates that act
+                                                            conditionally on classical data
+:py:class:`~pytket.predicates.NoMidMeasurePredicate`       
+                                                            All ``OpType.Measure`` gates act at
+                                                            the end of the :py:class:`~pytket.circuit.Circuit`
+                                                            (there are no subsequent gates on
+                                                            either the :py:class:`~pytket.unit_id.Qubit` measured
+                                                            or the :py:class:`~pytket.unit_id.Bit` written to)
+==========================================================  =====================================================
 
 .. Pre/post-conditions of passes
 
-When applying passes, you may find that you apply some constraint-solving pass to satisfy a particular :py:class:`Predicate`, but then a subsequent pass will invalidate it by, for example, introducing gates of different gate types or changing which qubits interact via multi-qubit gates. To help understand and manage this, each pass has a set of pre-conditions that specify the requirements assumed on the :py:class:`Circuit` in order for the pass to successfully be applied, and a set of post-conditions that specify which :py:class:`Predicate` s are guaranteed to hold for the outputs and which are invalidated or preserved by the pass. These can be viewed in the API reference for each pass.
+When applying passes, you may find that you apply some constraint-solving pass to satisfy a particular :py:class:`~pytket.predicates.Predicate`, but then a subsequent pass will invalidate it by, for example, introducing gates of different gate types or changing which qubits interact via multi-qubit gates. To help understand and manage this, each pass has a set of pre-conditions that specify the requirements assumed on the :py:class:`~pytket.circuit.Circuit` in order for the pass to successfully be applied, and a set of post-conditions that specify which :py:class:`~pytket.predicates.Predicate` s are guaranteed to hold for the outputs and which are invalidated or preserved by the pass. These can be viewed in the API reference for each pass.
 
 Users may find it desirable to enforce their own constraints upon circuits they are working with. It is possible to construct a :py:class:`UserDefinedPredicate` in pytket based on a function that returns a True/False value.
 
-Below is a minimal example where we construct a predicate which checks if our :py:class:`Circuit` contains fewer than 3 CX gates.
+Below is a minimal example where we construct a predicate which checks if our :py:class:`~pytket.circuit.Circuit` contains fewer than 3 CX gates.
 
 .. jupyter-execute::
 
@@ -102,7 +102,7 @@ Rebases
 
 .. Description
 
-One of the simplest constraints to solve for is the :py:class:`GateSetPredicate`, since we can just substitute each gate in a :py:class:`Circuit` with an equivalent sequence of gates in the target gateset according to some known gate decompositions. In ``pytket``, such passes are referred to as "rebases". The intention here is to perform this translation naively, leaving the optimisation of gate sequences to other passes. Rebases can be applied to any :py:class:`Circuit` and will preserve every structural :py:class:`Predicate`, only changing the types of gates used.
+One of the simplest constraints to solve for is the :py:class:`GateSetPredicate`, since we can just substitute each gate in a :py:class:`~pytket.circuit.Circuit` with an equivalent sequence of gates in the target gateset according to some known gate decompositions. In ``pytket``, such passes are referred to as "rebases". The intention here is to perform this translation naively, leaving the optimisation of gate sequences to other passes. Rebases can be applied to any :py:class:`~pytket.circuit.Circuit` and will preserve every structural :py:class:`~pytket.predicates.Predicate`, only changing the types of gates used.
 
 .. jupyter-execute::
 
@@ -116,7 +116,7 @@ One of the simplest constraints to solve for is the :py:class:`GateSetPredicate`
 
     print(circ.get_commands())
 
-:py:class:`RebaseTket` is a standard rebase pass that converts to CX and TK1 gates. This is the preferred internal gateset for many ``pytket`` compiler passes. However, it is possible to define a rebase for an arbitrary gateset. Using :py:class:`RebaseCustom`, we can provide an arbitrary set of one- and two-qubit gates. Rather than requiring custom decompositions to be provided for every gate type, it is sufficient to just give them for ``OpType.CX`` and ``OpType.TK1``. For any gate in a given :py:class:`Circuit`, it is either already in the target gateset, or we can use known decompositions to obtain a ``OpType.CX`` and ``OpType.TK1`` representation and then map this to the target gateset.
+:py:class:`RebaseTket` is a standard rebase pass that converts to CX and TK1 gates. This is the preferred internal gateset for many ``pytket`` compiler passes. However, it is possible to define a rebase for an arbitrary gateset. Using :py:class:`RebaseCustom`, we can provide an arbitrary set of one- and two-qubit gates. Rather than requiring custom decompositions to be provided for every gate type, it is sufficient to just give them for ``OpType.CX`` and ``OpType.TK1``. For any gate in a given :py:class:`~pytket.circuit.Circuit`, it is either already in the target gateset, or we can use known decompositions to obtain a ``OpType.CX`` and ``OpType.TK1`` representation and then map this to the target gateset.
 
 .. jupyter-execute::
 
@@ -168,15 +168,15 @@ Placement
 
 .. Task of selecting appropriate physical qubits to use; better use of connectivity and better noise characteristics
 
-Initially, a :py:class:`Circuit` designed without a target device in mind will be expressed in terms of actions on a set of "logical qubits" - those with semantic meaning to the computation. A `placement` (or `initial mapping`) is a map from these logical qubits to the physical qubits of the device that will be used to carry them. A given placement may be preferred over another if the connectivity of the physical qubits better matches the interactions between the logical qubits caused by multi-qubit gates, or if the selection of physical qubits has better noise characteristics. All of the information for connectivity and noise characteristics of a given :py:class:`Backend` is wrapped up in a :py:class:`BackendInfo` object by the :py:attr:`Backend.backend_info` property.
+Initially, a :py:class:`~pytket.circuit.Circuit` designed without a target device in mind will be expressed in terms of actions on a set of "logical qubits" - those with semantic meaning to the computation. A `placement` (or `initial mapping`) is a map from these logical qubits to the physical qubits of the device that will be used to carry them. A given placement may be preferred over another if the connectivity of the physical qubits better matches the interactions between the logical qubits caused by multi-qubit gates, or if the selection of physical qubits has better noise characteristics. All of the information for connectivity and noise characteristics of a given :py:class:`~pytket.backends.Backend` is wrapped up in a :py:class:`~pytket.backends.backendinfo.BackendInfo` object by the :py:attr:`Backend.backend_info` property.
 
 .. Affects where the logical qubits start initially, but it not necessarily where they will end up being measured at the end
 
-The placement only specifies where the logical qubits will be at the start of execution, which is not necessarily where they will end up on termination. Other compiler passes may choose to permute the qubits in the middle of a :py:class:`Circuit` to either exploit further optimisations or enable interactions between logical qubits that were not assigned to adjacent physical qubits.
+The placement only specifies where the logical qubits will be at the start of execution, which is not necessarily where they will end up on termination. Other compiler passes may choose to permute the qubits in the middle of a :py:class:`~pytket.circuit.Circuit` to either exploit further optimisations or enable interactions between logical qubits that were not assigned to adjacent physical qubits.
 
 .. Placement acts in place by renaming qubits to their physical addresses (classical data is never renamed)
 
-A placement pass will act in place on a :py:class:`Circuit` by renaming the qubits from their logical names (the :py:class:`UnitID` s used at circuit construction) to their physical addresses (the :py:class:`UnitID` s recognised by the :py:class:`Backend`). Classical data is never renamed.
+A placement pass will act in place on a :py:class:`~pytket.circuit.Circuit` by renaming the qubits from their logical names (the :py:class:`UnitID` s used at circuit construction) to their physical addresses (the :py:class:`UnitID` s recognised by the :py:class:`~pytket.backends.Backend`). Classical data is never renamed.
 
 .. Basic example
 
@@ -269,7 +269,7 @@ A custom placement may also be defined as a pass (which can then be combined wit
 
 .. Existing heuristics: trivial (all "unplaced"), line, graph, noise
 
-Several heuristics have been implemented for identifying candidate placements. For example, :py:class:`LinePlacement` will try to identify long paths on the connectivity graph which could be treated as a linear nearest-neighbour system. :py:class:`GraphPlacement` will try to identify a subgraph isomorphism between the graph of interacting logical qubits (up to some depth into the :py:class:`Circuit`) and the connectivity graph of the physical qubits. Then :py:class:`NoiseAwarePlacement` extends this to break ties in equivalently good graph maps by looking at the error rates of the physical qubits and their couplers. The latter two can be configured using e.g. :py:meth:`GraphPlacement.modify_config()` to change parameters like how far into the :py:class:`Circuit` it will look for interacting qubits (trading off time spent searching for the chance to find a better placement).
+Several heuristics have been implemented for identifying candidate placements. For example, :py:class:`LinePlacement` will try to identify long paths on the connectivity graph which could be treated as a linear nearest-neighbour system. :py:class:`GraphPlacement` will try to identify a subgraph isomorphism between the graph of interacting logical qubits (up to some depth into the :py:class:`~pytket.circuit.Circuit`) and the connectivity graph of the physical qubits. Then :py:class:`NoiseAwarePlacement` extends this to break ties in equivalently good graph maps by looking at the error rates of the physical qubits and their couplers. The latter two can be configured using e.g. :py:meth:`~pytket.utils.GraphPlacement.modify_config()` to change parameters like how far into the :py:class:`~pytket.circuit.Circuit` it will look for interacting qubits (trading off time spent searching for the chance to find a better placement).
 
 .. jupyter-input::
 
@@ -318,7 +318,7 @@ The heterogeneity of quantum architectures and limited connectivity of their qub
 .. Invalid interactions between non-local qubits can be sovled by moving qubits to adjacent positions or by performing a distributed operation using the intervening qubits
 .. Routing takes a placed circuit and finds non-local operations, inserting operations to fix them
 
-One solution here, is to scan through the :py:class:`Circuit` looking for invalid interactions. Each of these can be solved by either moving the qubits around on the architecture by adding ``OpType.SWAP`` gates until they are in adjacent locations, or performing a distributed entangling operation using the intervening qubits (such as the "bridged-CX" ``OpType.BRIDGE`` which uses 4 CX gates and a single shared neighbour). The `routing` procedure used in the ``pytket`` ``RoutingPass`` takes a placed :py:class:`Circuit` and inserts gates to reduce non-local operations to sequences of valid local ones.
+One solution here, is to scan through the :py:class:`~pytket.circuit.Circuit` looking for invalid interactions. Each of these can be solved by either moving the qubits around on the architecture by adding ``OpType.SWAP`` gates until they are in adjacent locations, or performing a distributed entangling operation using the intervening qubits (such as the "bridged-CX" ``OpType.BRIDGE`` which uses 4 CX gates and a single shared neighbour). The `routing` procedure used in the ``pytket`` ``RoutingPass`` takes a placed :py:class:`~pytket.circuit.Circuit` and inserts gates to reduce non-local operations to sequences of valid local ones.
 
 .. jupyter-input::
 
@@ -357,7 +357,7 @@ Decomposing Structures
 .. Box structures for high-level operations need to be mapped to low-level gates
 .. Unwraps `CircuitBox`es, decomposes others into known, efficient patterns
 
-The numerous Box structures in ``pytket`` provide practical abstractions for high-level operations to assist in :py:class:`Circuit` construction, but need to be mapped to low-level gates before we can run the :py:class:`Circuit`. The :py:class:`DecomposeBoxes` pass will unwrap any :py:class:`CircBox`, substituting it for the corresponding :py:class:`Circuit`, and decompose others like the :py:class:`Unitary1qBox` and :py:class:`PauliExpBox` into efficient templated patterns of gates.
+The numerous Box structures in ``pytket`` provide practical abstractions for high-level operations to assist in :py:class:`~pytket.circuit.Circuit` construction, but need to be mapped to low-level gates before we can run the :py:class:`~pytket.circuit.Circuit`. The :py:class:`~pytket.passes.DecomposeBoxes` pass will unwrap any :py:class:`~pytket.circuit.CircBox`, substituting it for the corresponding :py:class:`~pytket.circuit.Circuit`, and decompose others like the :py:class:`~pytket.circuit.Unitary1qBox` and :py:class:`~pytket.circuit.PauliExpBox` into efficient templated patterns of gates.
 
 .. jupyter-execute::
 
@@ -379,17 +379,17 @@ The numerous Box structures in ``pytket`` provide practical abstractions for hig
 
 .. This could introduce undetermined structures to the circuit, invalidating gate set, connectivity, and other crucial requirements of the backend, so recommended to be performed early in the compilation procedure, allowing for these requirements to be solved again
 
-Unwrapping Boxes could introduce arbitrarily complex structures into a :py:class:`Circuit` which could possibly invalidate almost all :py:class:`Predicate` s, including :py:class:`GateSetPredicate`, :py:class:`ConnectivityPredicate`, and :py:class:`NoMidMeasurePredicate`. It is hence recommended to apply this early in the compilation procedure, prior to any pass that solves for these constraints.
+Unwrapping Boxes could introduce arbitrarily complex structures into a :py:class:`~pytket.circuit.Circuit` which could possibly invalidate almost all :py:class:`~pytket.predicates.Predicate` s, including :py:class:`GateSetPredicate`, :py:class:`ConnectivityPredicate`, and :py:class:`NoMidMeasurePredicate`. It is hence recommended to apply this early in the compilation procedure, prior to any pass that solves for these constraints.
 
 Optimisations
 -------------
 
-Having covered the primary goal of compilation and reduced our :py:class:`Circuit` s to a form where they can be run, we find that there are additional techniques we can use to obtain more reliable results by reducing the noise and probability of error. Most :py:class:`Circuit` optimisations follow the mantra of "fewer expensive resources gives less opportunity for noise to creep in", whereby if we find an alternative :py:class:`Circuit` that is observationally equivalent in a perfect noiseless setting but uses fewer resources (gates, time, ancilla qubits) then it is likely to perform better in a noisy context (though not always guaranteed).
+Having covered the primary goal of compilation and reduced our :py:class:`~pytket.circuit.Circuit` s to a form where they can be run, we find that there are additional techniques we can use to obtain more reliable results by reducing the noise and probability of error. Most :py:class:`~pytket.circuit.Circuit` optimisations follow the mantra of "fewer expensive resources gives less opportunity for noise to creep in", whereby if we find an alternative :py:class:`~pytket.circuit.Circuit` that is observationally equivalent in a perfect noiseless setting but uses fewer resources (gates, time, ancilla qubits) then it is likely to perform better in a noisy context (though not always guaranteed).
 
 .. Generic peephole - "looking for specific patterns of gates"; may take into account local commutations
 .. Examples describing `RemoveRedundancies`, `EulerAngleReduction`, `KAKDecomposition`, and `CliffordSimp`
 
-If we have two :py:class:`Circuit` s that are observationally equivalent, we know that replacing one for the other in any context also gives something that is observationally equivalent. The simplest optimisations will take an inefficient pattern, find all matches in the given :py:class:`Circuit` and replace them by the efficient alternative. A good example from this class of `peephole` optimisations is the :py:class:`RemoveRedundancies` pass, which looks for a number of easy-to-spot redundant gates, such as zero-parameter rotation gates, gate-inverse pairs, adjacent rotation gates in the same basis, and diagonal rotation gates followed by measurements.
+If we have two :py:class:`~pytket.circuit.Circuit` s that are observationally equivalent, we know that replacing one for the other in any context also gives something that is observationally equivalent. The simplest optimisations will take an inefficient pattern, find all matches in the given :py:class:`~pytket.circuit.Circuit` and replace them by the efficient alternative. A good example from this class of `peephole` optimisations is the :py:class:`RemoveRedundancies` pass, which looks for a number of easy-to-spot redundant gates, such as zero-parameter rotation gates, gate-inverse pairs, adjacent rotation gates in the same basis, and diagonal rotation gates followed by measurements.
 
 .. jupyter-execute::
 
@@ -407,7 +407,7 @@ If we have two :py:class:`Circuit` s that are observationally equivalent, we k
     RemoveRedundancies().apply(circ)
     print(circ.get_commands())
 
-It is understandable to question the relevance of such an optimisation, since a sensible programmer would not intentionally write a :py:class:`Circuit` with such redundant gates. These are still largely useful because other compiler passes might introduce them, such as routing adding a ``OpType.SWAP`` gate immediately following a ``OpType.SWAP`` gate made by the user, or commuting a Z-rotation through the control of a CX which allows it to merge with another Z-rotation on the other side.
+It is understandable to question the relevance of such an optimisation, since a sensible programmer would not intentionally write a :py:class:`~pytket.circuit.Circuit` with such redundant gates. These are still largely useful because other compiler passes might introduce them, such as routing adding a ``OpType.SWAP`` gate immediately following a ``OpType.SWAP`` gate made by the user, or commuting a Z-rotation through the control of a CX which allows it to merge with another Z-rotation on the other side.
 
 Previous iterations of the :py:class:`CliffordSimp` pass would work in this way as well, looking for specific sequences of Clifford gates where we could reduce the number of two-qubit gates. This has since been generalised to spot these patterns up to gate commutations and changes of basis from single-qubit Clifford rotations.
 
@@ -462,7 +462,7 @@ The next step up in scale has optimisations based on optimal decompositions of s
 .. Situational macroscopic - identifies large structures in circuit or converts circuit to alternative algebraic representation; use properties of the structures to find simplifications; resynthesise into basic gates
 .. Examples describing `PauliSimp`
 
-All of these so far are generic optimisations that work for any application, but only identify local redundancies since they are limited to working up to individual gate commutations. Other techniques instead focus on identifying macroscopic structures in a :py:class:`Circuit` or convert it entirely into an alternative algebraic representation, and then using the properties of the structures/algebra to find simplifications and resynthesise into basic gates. For example, the :py:class:`PauliSimp` pass will represent the entire :py:class:`Circuit` as a sequence of exponentials of Pauli operators, capturing the effects of non-Clifford gates as rotations in a basis determined by the Clifford gates. This abstracts away any redundant information in the Clifford gates entirely, and can be used to merge non-Clifford gates that cannot be brought together from any sequence of commutations, as well as finding efficient Clifford constructions for the basis changes.
+All of these so far are generic optimisations that work for any application, but only identify local redundancies since they are limited to working up to individual gate commutations. Other techniques instead focus on identifying macroscopic structures in a :py:class:`~pytket.circuit.Circuit` or convert it entirely into an alternative algebraic representation, and then using the properties of the structures/algebra to find simplifications and resynthesise into basic gates. For example, the :py:class:`~pytket.passes.PauliSimp` pass will represent the entire :py:class:`~pytket.circuit.Circuit` as a sequence of exponentials of Pauli operators, capturing the effects of non-Clifford gates as rotations in a basis determined by the Clifford gates. This abstracts away any redundant information in the Clifford gates entirely, and can be used to merge non-Clifford gates that cannot be brought together from any sequence of commutations, as well as finding efficient Clifford constructions for the basis changes.
 
 .. jupyter-execute::
 
@@ -482,9 +482,9 @@ All of these so far are generic optimisations that work for any application, but
 
 .. May not always improve the circuit if it doesn't match the structures it was designed to exploit, and the large structural changes from resynthesis could make routing harder
 
-This can give great benefits for :py:class:`Circuit` s where non-Clifford gates are sparse and there is hence a lot of redundancy in the Clifford change-of-basis sections. But if the :py:class:`Circuit` already has a very efficient usage of Clifford gates, this will be lost when converting to the abstract representation, and so the resynthesis is likely to give less efficient sequences. The large structural changes from abstraction and resynthesis can also make routing harder to perform as the interaction graph of the logical qubits can drastically change. The effectiveness of such optimisations depends on the situation, but can be transformative under the right circumstances.
+This can give great benefits for :py:class:`~pytket.circuit.Circuit` s where non-Clifford gates are sparse and there is hence a lot of redundancy in the Clifford change-of-basis sections. But if the :py:class:`~pytket.circuit.Circuit` already has a very efficient usage of Clifford gates, this will be lost when converting to the abstract representation, and so the resynthesis is likely to give less efficient sequences. The large structural changes from abstraction and resynthesis can also make routing harder to perform as the interaction graph of the logical qubits can drastically change. The effectiveness of such optimisations depends on the situation, but can be transformative under the right circumstances.
 
-Some of these optimisation passes have optional parameters to customise the routine slightly. A good example is adapting the :py:class:`PauliSimp` pass to have a preference for different forms of ``OpType.CX`` decompositions. Setting the ``cx_config`` option to ``CXConfigType.Snake`` (default) will prefer chains of gates where the target of one becomes the control of the next, whereas ``CXConfigType.Star`` prefers using a single qubit as the control for many gates, and ``CXConfigType.Tree`` introduces entanglement in a balanced tree form. Each of these has its own benefits and drawbacks that could make it more effective for a particular routine, like ``CXConfigType.Snake`` giving circuits that are easier to route on linear nearest-neighbour architectures, ``CXConfigType.Star`` allowing any of the gates to commute through to cancel out with others at the start or end of the sequence, and ``CXConfigType.Tree`` giving optimal depth on a fully-connected device.
+Some of these optimisation passes have optional parameters to customise the routine slightly. A good example is adapting the :py:class:`~pytket.passes.PauliSimp` pass to have a preference for different forms of ``OpType.CX`` decompositions. Setting the ``cx_config`` option to ``CXConfigType.Snake`` (default) will prefer chains of gates where the target of one becomes the control of the next, whereas ``CXConfigType.Star`` prefers using a single qubit as the control for many gates, and ``CXConfigType.Tree`` introduces entanglement in a balanced tree form. Each of these has its own benefits and drawbacks that could make it more effective for a particular routine, like ``CXConfigType.Snake`` giving circuits that are easier to route on linear nearest-neighbour architectures, ``CXConfigType.Star`` allowing any of the gates to commute through to cancel out with others at the start or end of the sequence, and ``CXConfigType.Tree`` giving optimal depth on a fully-connected device.
 
 .. jupyter-execute::
 
@@ -519,7 +519,7 @@ Combinators
 .. Passes are building blocks that can be composed into more sophisticated strategies encapsulating the full compilation flow
 .. Basic sequencing
 
-The passes encountered so far represent elementary, self-contained transformations on :py:class:`Circuit` s. In practice, we will almost always want to apply sequences of these to combine optimisations with solving for many constraints. The passes in ``pytket`` have a rudimentary compositional structure to describe generic compilation strategies, with the most basic example being just applying a list of passes in order.
+The passes encountered so far represent elementary, self-contained transformations on :py:class:`~pytket.circuit.Circuit` s. In practice, we will almost always want to apply sequences of these to combine optimisations with solving for many constraints. The passes in ``pytket`` have a rudimentary compositional structure to describe generic compilation strategies, with the most basic example being just applying a list of passes in order.
 
 .. jupyter-execute::
 
@@ -548,7 +548,7 @@ When composing optimisation passes, we may find that applying one type of optimi
     comp.apply(circ)
     print(circ.get_commands())
 
-.. warning:: This looping mechanism does not directly compare the :py:class:`Circuit` to its old state from the previous iteration, instead checking if any of the passes within the loop body claimed they performed any rewrite. Some sequences of passes will do and undo some changes to the :py:class:`Circuit`, giving no net effect but nonetheless causing the loop to repeat. This can lead to infinite loops if used in such a way. Some passes where the :py:class:`Circuit` is converted to another form and back again (e.g. :py:class:`PauliSimp`) will always report that a change took place. We recommend testing any looping passes thoroughly to check for termination.
+.. warning:: This looping mechanism does not directly compare the :py:class:`~pytket.circuit.Circuit` to its old state from the previous iteration, instead checking if any of the passes within the loop body claimed they performed any rewrite. Some sequences of passes will do and undo some changes to the :py:class:`~pytket.circuit.Circuit`, giving no net effect but nonetheless causing the loop to repeat. This can lead to infinite loops if used in such a way. Some passes where the :py:class:`~pytket.circuit.Circuit` is converted to another form and back again (e.g. :py:class:`~pytket.passes.PauliSimp`) will always report that a change took place. We recommend testing any looping passes thoroughly to check for termination.
 
 .. Repeat with metric - useful when hard to tell when a change is being made or you only care about specific changes
 
@@ -568,11 +568,11 @@ Increased termination safety can be given by only repeating whilst some easy-to-
 
 .. May reject compositions if pre/post-conditions don't match up; some passes will fail to complete or fail to achieve their objective if a circuit does not match their pre-conditions, so we prevent compositions where the latter's pre-conditions cannot be guaranteed
 
-We mentioned earlier that each pass has a set of pre-conditions and post-conditions expressed via :py:class:`Predicate` s. We may find that applying one pass invalidates the pre-conditions of a later pass, meaning it may hit an error when applied to a :py:class:`Circuit`. For example, the :py:class:`KAKDecomposition` optimisation method can only operate on :py:class:`Circuit` s with a specific gate set which doesn't allow for any gates on more than 2 qubits, so when :py:class:`RoutingPass` can introduce ``OpType.BRIDGE`` gates over 3 qubits, this could cause an error when trying to apply :py:class:`KAKDecomposition`. When using combinators like :py:class:`SequencePass` and :py:class:`RepeatPass`, ``pytket`` checks that the passes are safe to compose, in the sense that former passes do not invalidate pre-conditions of the latter passes. This procedure uses a basic form of Hoare logic to identify new pre- and post-conditions for the combined pass and identify whether it is still satisfiable.
+We mentioned earlier that each pass has a set of pre-conditions and post-conditions expressed via :py:class:`~pytket.predicates.Predicate` s. We may find that applying one pass invalidates the pre-conditions of a later pass, meaning it may hit an error when applied to a :py:class:`~pytket.circuit.Circuit`. For example, the :py:class:`KAKDecomposition` optimisation method can only operate on :py:class:`~pytket.circuit.Circuit` s with a specific gate set which doesn't allow for any gates on more than 2 qubits, so when :py:class:`RoutingPass` can introduce ``OpType.BRIDGE`` gates over 3 qubits, this could cause an error when trying to apply :py:class:`KAKDecomposition`. When using combinators like :py:class:`SequencePass` and :py:class:`RepeatPass`, ``pytket`` checks that the passes are safe to compose, in the sense that former passes do not invalidate pre-conditions of the latter passes. This procedure uses a basic form of Hoare logic to identify new pre- and post-conditions for the combined pass and identify whether it is still satisfiable.
 
 .. Warning about composing with `DecomposeBoxes`
 
-A special mention here goes to the :py:class:`DecomposeBoxes` pass. Because the Box structures could potentially contain arbitrary sequences of gates, there is no guarantee that expanding them will yield a :py:class:`Circuit` that satisfies `any` :py:class:`Predicate`. Since it has potential to invalidate the pre-conditions of any subsequent pass, composing it with anything else `will` generate such an error.
+A special mention here goes to the :py:class:`~pytket.passes.DecomposeBoxes` pass. Because the Box structures could potentially contain arbitrary sequences of gates, there is no guarantee that expanding them will yield a :py:class:`~pytket.circuit.Circuit` that satisfies `any` :py:class:`~pytket.predicates.Predicate`. Since it has potential to invalidate the pre-conditions of any subsequent pass, composing it with anything else `will` generate such an error.
 
 .. jupyter-execute::
     :raises: RuntimeError
@@ -589,13 +589,13 @@ Knowing what sequences of compiler passes to apply for maximal performance is of
 
 .. `FullPeepholeOptimise` kitchen-sink, but assumes a universal quantum computer
 
-In practice, peephole and structure-preserving optimisations are almost always strictly beneficial to apply, or at least will never increase the size of the :py:class:`Circuit`. The :py:class:`FullPeepholeOptimise` pass applies Clifford simplifications, commutes single-qubit gates to the front of the circuit and applies passes to squash subcircuits of up to three qubits. This provides a one-size-approximately-fits-all "kitchen sink" solution to :py:class:`Circuit` optimisation. This assumes no device constraints by default, so will not generally preserve gateset, connectivity, etc.
+In practice, peephole and structure-preserving optimisations are almost always strictly beneficial to apply, or at least will never increase the size of the :py:class:`~pytket.circuit.Circuit`. The :py:class:`~pytket.passes.FullPeepholeOptimise` pass applies Clifford simplifications, commutes single-qubit gates to the front of the circuit and applies passes to squash subcircuits of up to three qubits. This provides a one-size-approximately-fits-all "kitchen sink" solution to :py:class:`~pytket.circuit.Circuit` optimisation. This assumes no device constraints by default, so will not generally preserve gateset, connectivity, etc.
 
 When targeting a heterogeneous device architecture, solving this constraint in its entirety will generally require both placement and subsequent routing. :py:class:`DefaultMappingPass` simply combines these to apply the :py:class:`GraphPlacement` strategy and solve any remaining invalid multi-qubit operations. This is taken a step further with :py:class:`CXMappingPass` which also decomposes the introduced ``OpType.SWAP`` and ``OpType.BRIDGE`` gates into elementary ``OpType.CX`` gates.
 
 .. `Synthesise<>` passes combine light optimisations that preserve qubit connectivity and target a specific gate set
 
-After solving for the device connectivity, we then need to restrict what optimisations we can apply to those that won't invalidate this. The set of :py:class:`SynthesiseX` passes combine light optimisations that preserve the qubit connectivity and target a specific final gate set (e.g. :py:class:`SynthesiseTket` guarantees the output is in the gateset of ``OpType.CX``, ``OpType.TK1``, and ``OpType.Measure``). In general, this will not reduce the size of a :py:class:`Circuit` as much as :py:class:`FullPeepholeOptimise`, but has the benefit of removing some redundancies introduced by routing without invalidating it.
+After solving for the device connectivity, we then need to restrict what optimisations we can apply to those that won't invalidate this. The set of :py:class:`SynthesiseX` passes combine light optimisations that preserve the qubit connectivity and target a specific final gate set (e.g. :py:class:`SynthesiseTket` guarantees the output is in the gateset of ``OpType.CX``, ``OpType.TK1``, and ``OpType.Measure``). In general, this will not reduce the size of a :py:class:`~pytket.circuit.Circuit` as much as :py:class:`~pytket.passes.FullPeepholeOptimise`, but has the benefit of removing some redundancies introduced by routing without invalidating it.
 
 .. jupyter-input::
 
@@ -633,26 +633,26 @@ After solving for the device connectivity, we then need to restrict what optimis
 
 
 .. Note::
-    :py:class:`FullPeepholeOptimise` takes an optional ``allow_swaps`` argument. This is a boolean flag to indicate whether :py:class:`FullPeepholeOptimise` should preserve the circuit connectivity or not. If set to ``False`` the pass will presrve circuit connectivity but the circuit will generally be less optimised than if connectivity was ignored.
+    :py:class:`~pytket.passes.FullPeepholeOptimise` takes an optional ``allow_swaps`` argument. This is a boolean flag to indicate whether :py:class:`~pytket.passes.FullPeepholeOptimise` should preserve the circuit connectivity or not. If set to ``False`` the pass will presrve circuit connectivity but the circuit will generally be less optimised than if connectivity was ignored.
     
-    :py:class:`FullPeepholeOptimise` also takes an optional ``target_2qb_gate`` argument to specify whether to target the {:py:class:`OpType.TK1`, :py:class:`OpType.CX`} or {:py:class:`OpType.TK1`, :py:class:`OpType.TK2`} gateset.
+    :py:class:`~pytket.passes.FullPeepholeOptimise` also takes an optional ``target_2qb_gate`` argument to specify whether to target the {:py:class:`OpType.TK1`, :py:class:`OpType.CX`} or {:py:class:`OpType.TK1`, :py:class:`OpType.TK2`} gateset.
 
 .. Note::
-    Prevous versions of :py:class:`FullPeepholeOptimise` did not apply the :py:class:`ThreeQubitSquash` pass. There is a :py:class:`PeepholeOptimise2Q` pass which applies the old pass sequence with the :py:class:`ThreeQubitSquash` pass excluded.
+    Prevous versions of :py:class:`~pytket.passes.FullPeepholeOptimise` did not apply the :py:class:`~pytket.passes.ThreeQubitSquash` pass. There is a :py:class:`~pytket.passes.PeepholeOptimise2Q` pass which applies the old pass sequence with the :py:class:`ThreeQubitSquash` pass excluded.
 
 .. `Backend.default_compilation_pass` gives a recommended compiler pass to solve the backend's constraints with little or light optimisation
 
-Also in this category of pre-defined sequences, we have the :py:meth:`Backend.default_compilation_pass()` which is run by :py:meth:`Backend.get_compiled_circuit`. These give a recommended compiler pass to solve the :py:class:`Backend` s constraints with a choice of optimisation levels.
+Also in this category of pre-defined sequences, we have the :py:meth:`~pytket.backends.Backend.default_compilation_pass()` which is run by :py:meth:`~pytket.backends.Backend.get_compiled_circuit`. These give a recommended compiler pass to solve the :py:class:`~pytket.backends.Backend` s constraints with a choice of optimisation levels.
 
 ==================  ========================================================================================================
 Optimisation level  Description
 ==================  ========================================================================================================
 0                   Just solves the constraints as simply as possible. No optimisation.
-1                   Adds basic optimisations (those covered by the :py:meth:`SynthesiseX` passes) for efficient compilation.
-2                   Extends to more intensive optimisations (those covered by the :py:meth:`FullPeepholeOptimise` pass).
+1                   Adds basic optimisations (those covered by the :py:class:`SynthesiseX` passes) for efficient compilation.
+2                   Extends to more intensive optimisations (those covered by the :py:class:`~pytket.passes.FullPeepholeOptimise` pass).
 ==================  ========================================================================================================
 
-We will now demonstrate the :py:meth:`default_compilation_pass` with the different levels of optimisation using the ``ibmq_quito`` device. 
+We will now demonstrate the :py:meth:`~pytket.backends.Backend.default_compilation_pass` with the different levels of optimisation using the ``ibmq_quito`` device. 
 
 As more intensive optimisations are applied by level 2 the pass may take a long to run for large circuits. In this case it may be preferable to apply the lighter optimisations of level 1.
 
@@ -717,7 +717,7 @@ Guidance for Combining Passes
 
 .. More powerful optimisations tend to have fewer guarantees on the structure of the output, so advisable to perform before trying to satisfy device constraints
 
-We find that the most powerful optimisation techniques (those that have the potential to reduce :py:class:`Circuit` size the most for some class of :py:class:`Circuit` s) tend to have fewer guarantees on the structure of the output, requiring a universal quantum computer with the ability to perform any gates on any qubits. It is recommended to apply these early on in compilation.
+We find that the most powerful optimisation techniques (those that have the potential to reduce :py:class:`~pytket.circuit.Circuit` size the most for some class of :py:class:`~pytket.circuit.Circuit` s) tend to have fewer guarantees on the structure of the output, requiring a universal quantum computer with the ability to perform any gates on any qubits. It is recommended to apply these early on in compilation.
 
 .. Solving some device constraints might invalidate others, such as routing invalidating `NoMidMeasurePredicate` and `GateSetPredicate`
 
@@ -725,7 +725,7 @@ The passes to solve some device constraints might invalidate others: for example
 
 .. Recommended order of decompose boxes, strong optimisations, placement, routing, delay measures, rebase; could insert minor optimisations between each step to tidy up any redundancies introduced as long as they preserve solved constraints
 
-For most standard use cases, we recommend starting with :py:class:`DecomposeBoxes` to reduce the :py:class:`Circuit` down to primitive gates, followed by strong optimisation passes like :py:class:`PauliSimp` (when appropriate for the types of :py:class:`Circuit` s being considered) and :py:class:`FullPeepholeOptimise` to eliminate a large number of redundant operations. Then start to solve some more device constraints with some choice of placement and routing strategy, followed by :py:class:`DelayMeasures` to push measurements back through any introduced ``OpType.SWAP`` or ``OpType.BRIDGE`` gates, and then finally rebase to the desired gate set. The :py:meth:`Backend.default_compilation_pass()` definitions can replace this sequence from placement onwards for simplicity. Minor optimisations could also be inserted between successive steps to tidy up any redundancies introduced, as long as they preserve the solved constraints.
+For most standard use cases, we recommend starting with :py:class:`~pytket.passes.DecomposeBoxes` to reduce the :py:class:`~pytket.circuit.Circuit` down to primitive gates, followed by strong optimisation passes like :py:class:`PauliSimp` (when appropriate for the types of :py:class:`~pytket.circuit.Circuit` s being considered) and :py:class:`~pytket.passes.FullPeepholeOptimise` to eliminate a large number of redundant operations. Then start to solve some more device constraints with some choice of placement and routing strategy, followed by :py:class:`DelayMeasures` to push measurements back through any introduced ``OpType.SWAP`` or ``OpType.BRIDGE`` gates, and then finally rebase to the desired gate set. The :py:meth:`~pytket.backends.Backend.default_compilation_pass()` definitions can replace this sequence from placement onwards for simplicity. Minor optimisations could also be inserted between successive steps to tidy up any redundancies introduced, as long as they preserve the solved constraints.
 
 Initial and Final Maps
 ----------------------
@@ -733,13 +733,13 @@ Initial and Final Maps
 .. Placement, routing, and other passes can change the names of qubits; the map from logical to physical qubits can be different at the start and end of the circuit; define initial and final maps
 .. Can use this to identify what placement was selected or how to interpret the final state
 
-:py:class:`PlacementPass` modifies the set of qubits used in the :py:class:`Circuit` from the logical names used during construction to the names of the physical addresses on the :py:class:`Backend`, so the logical qubit names wiil no longer exist within the :py:class:`Circuit` by design. Knowing the map between the logical qubits and the chosen physical qubits is necessary for understanding the choice of placement, interpreting the final state from a naive simulator, identifying which physical qubits each measurement was made on for error mitigation, and appending additional gates to the logical qubits after applying the pass.
+:py:class:`PlacementPass` modifies the set of qubits used in the :py:class:`~pytket.circuit.Circuit` from the logical names used during construction to the names of the physical addresses on the :py:class:`~pytket.backends.Backend`, so the logical qubit names wiil no longer exist within the :py:class:`~pytket.circuit.Circuit` by design. Knowing the map between the logical qubits and the chosen physical qubits is necessary for understanding the choice of placement, interpreting the final state from a naive simulator, identifying which physical qubits each measurement was made on for error mitigation, and appending additional gates to the logical qubits after applying the pass.
 
-Other passes like :py:class:`RoutingPass` and :py:class:`CliffordSimp` can introduce (explicit or implicit) permutations of the logical qubits in the middle of a :py:class:`Circuit`, meaning a logical qubit may exist on a different physical qubit at the start of the :py:class:`Circuit` compared to the end.
+Other passes like :py:class:`RoutingPass` and :py:class:`CliffordSimp` can introduce (explicit or implicit) permutations of the logical qubits in the middle of a :py:class:`~pytket.circuit.Circuit`, meaning a logical qubit may exist on a different physical qubit at the start of the :py:class:`~pytket.circuit.Circuit` compared to the end.
 
 .. Encapsulating a circuit in a `CompilationUnit` allows the initial and final maps to be tracked when a pass is applied
 
-We can wrap up a :py:class:`Circuit` in a :py:class:`CompilationUnit` to allow us to track any changes to the locations of the logical qubits when passes are applied. The :py:attr:`CompilationUnit.initial_map` is a dictionary mapping the original :py:class:`UnitID` s to the corresponding :py:class:`UnitID` used in :py:attr:`CompilationUnit.circuit`, and similarly :py:attr:`CompilationUnit.final_map` for outputs. Applying :py:meth:`BasePass.apply()` to a :py:class:`CompilationUnit` will apply the transformation to the underlying :py:class:`Circuit` and track the changes to the initial and final maps.
+We can wrap up a :py:class:`~pytket.circuit.Circuit` in a :py:class:`CompilationUnit` to allow us to track any changes to the locations of the logical qubits when passes are applied. The :py:attr:`CompilationUnit.initial_map` is a dictionary mapping the original :py:class:`UnitID` s to the corresponding :py:class:`UnitID` used in :py:attr:`CompilationUnit.circuit`, and similarly :py:attr:`CompilationUnit.final_map` for outputs. Applying :py:meth:`BasePass.apply()` to a :py:class:`CompilationUnit` will apply the transformation to the underlying :py:class:`~pytket.circuit.Circuit` and track the changes to the initial and final maps.
 
 .. jupyter-input::
 
@@ -773,7 +773,7 @@ Compiling Symbolic Circuits
 
 .. Defining a single symbolic circuit and instantiating it multiple times saves effort in circuit construction, and means the circuit only has to be compiled once, saving time or allowing more expensive optimisations to be considered
 
-For variational algorithms, the prominent benefit of defining a :py:class:`Circuit` symbolically and only instantiating it with concrete values when needed is that the compilation procedure would only need to be performed once. By saving time here we can cut down the overall time for an experiment; we could invest the time saved into applying more expensive optimisations on the :py:class:`Circuit` to reduce the impact of noise further.
+For variational algorithms, the prominent benefit of defining a :py:class:`~pytket.circuit.Circuit` symbolically and only instantiating it with concrete values when needed is that the compilation procedure would only need to be performed once. By saving time here we can cut down the overall time for an experiment; we could invest the time saved into applying more expensive optimisations on the :py:class:`~pytket.circuit.Circuit` to reduce the impact of noise further.
 
 .. Example with variational optimisation using statevector simulator
 
@@ -812,15 +812,15 @@ For variational algorithms, the prominent benefit of defining a :py:class:`Circu
 
 .. Warning about `NoSymbolsPredicate` and necessity of instantiation before running on backends
 
-.. note:: Every :py:class:`Backend` requires :py:class:`NoSymbolsPredicate`, so it is necessary to instantiate all symbols before running a :py:class:`Circuit`.
+.. note:: Every :py:class:`~pytket.backends.Backend` requires :py:class:`NoSymbolsPredicate`, so it is necessary to instantiate all symbols before running a :py:class:`~pytket.circuit.Circuit`.
 
 User-defined Passes
 ===================
 
 We have already seen that pytket allows users to combine passes in a desired order using :py:class:`SequencePass`. An addtional feature is the :py:class:`CustomPass` which allows users to define their own custom circuit transformation using pytket.
-The :py:class:`CustomPass` class accepts a ``transform`` parameter, a python function that takes a :py:class:`Circuit` as input and returns a :py:class:`Circuit` as output. 
+The :py:class:`CustomPass` class accepts a ``transform`` parameter, a python function that takes a :py:class:`~pytket.circuit.Circuit` as input and returns a :py:class:`~pytket.circuit.Circuit` as output. 
 
-We will show how to use :py:class:`CustomPass` by defining a simple transformation that replaces any Pauli Z gate in the :py:class:`Circuit` with a Hadamard gate, Pauli X gate, Hadamard gate chain.
+We will show how to use :py:class:`CustomPass` by defining a simple transformation that replaces any Pauli Z gate in the :py:class:`~pytket.circuit.Circuit` with a Hadamard gate, Pauli X gate, Hadamard gate chain.
 
 .. jupyter-execute::
 
@@ -843,7 +843,7 @@ We will show how to use :py:class:`CustomPass` by defining a simple transformati
 
         return circ_prime
 
-After we've defined our ``transform`` we can construct a :py:class:`CustomPass`. This pass can then be applied to a :py:class:`Circuit`.
+After we've defined our ``transform`` we can construct a :py:class:`CustomPass`. This pass can then be applied to a :py:class:`~pytket.circuit.Circuit`.
 
 .. jupyter-execute::
 
@@ -865,7 +865,7 @@ After we've defined our ``transform`` we can construct a :py:class:`CustomPass`.
 We see from the output above that our newly defined :py:class:`DecompseZPass` has successfully decomposed the Pauli Z gates to Hadamard, Pauli X, Hadamard chains and left other gates unchanged.
 
 .. warning::
-    pytket does not require that :py:class:`CustomPass` preserves the unitary of the :py:class:`Circuit` . This is for the user to ensure.
+    pytket does not require that :py:class:`CustomPass` preserves the unitary of the :py:class:`~pytket.circuit.Circuit` . This is for the user to ensure.
 
 
 Partial Compilation
@@ -873,13 +873,13 @@ Partial Compilation
 
 .. Commonly want to run many circuits that have large identical regions; by splitting circuits into regions, can often compile individually and compose to speed up compilation time
 
-A common pattern across expectation value and tomography experiments is to run many :py:class:`Circuit` s that have large identical regions, such as a single state preparation with many different measurements. We can further speed up the overall compilation time by splitting up the state preparation from the measurements, compiling each subcircuit only once, and composing together at the end.
+A common pattern across expectation value and tomography experiments is to run many :py:class:`~pytket.circuit.Circuit` s that have large identical regions, such as a single state preparation with many different measurements. We can further speed up the overall compilation time by splitting up the state preparation from the measurements, compiling each subcircuit only once, and composing together at the end.
 
 .. Only have freedom to identify good placements for the first subcircuit to be run, the rest are determined by final maps in order to compose well
 
 The main technical consideration here is that the compiler will only have the freedom to identify good placements for the first subcircuit to be run. This means that the state preparation should be compiled first, and the placement for the measurements is given by the final map in order to compose well.
 
-Once compiled, we can use :py:meth:`Backend.process_circuits` to submit several circuits at once for execution on the backend. The circuits to be executed are passed as list. If the backend is shot-based, the number of shots can be passed using the `n_shots` parameter, which can be a single integer or a list of integers of the same length as the list of circuits to be executed. In the following example, 4000 shots are measured for the first circuit and 2000 for the second.
+Once compiled, we can use :py:meth:`~pytket.backends.Backend.process_circuits` to submit several circuits at once for execution on the backend. The circuits to be executed are passed as list. If the backend is shot-based, the number of shots can be passed using the `n_shots` parameter, which can be a single integer or a list of integers of the same length as the list of circuits to be executed. In the following example, 4000 shots are measured for the first circuit and 2000 for the second.
 
 .. Example of state prep with many measurements; compile state prep once, inspect final map, use this as placement for measurement circuits and compile them, then compose
 
@@ -930,19 +930,19 @@ Measurement Reduction
 .. Naively, need one measurement circuit per measurement term
 .. Commuting observables can be measured simultaneously
 
-Suppose we have one of these measurement scenarios (i.e. a single state preparation, but many measurements to make on it) and that each of the measurements is a Pauli observable, such as when calculating the expectation value of the state with respect to some :py:class:`QubitPauliOperator`. Naively, we would need a different measurement :py:class:`Circuit` per term in the operator, but we can reduce this by exploiting the fact that commuting observables can be measured simultaneously.
+Suppose we have one of these measurement scenarios (i.e. a single state preparation, but many measurements to make on it) and that each of the measurements is a Pauli observable, such as when calculating the expectation value of the state with respect to some :py:class:`QubitPauliOperator`. Naively, we would need a different measurement :py:class:`~pytket.circuit.Circuit` per term in the operator, but we can reduce this by exploiting the fact that commuting observables can be measured simultaneously.
 
 .. Given a set of observables, partition into sets that are easy to measure simultaneously and generate circuits performing this by diagonalising them (reducing each to a combination of Z-measurements)
 
-Given a set of observables, we can partition them into subsets that are easy to measure simultaneously. A :py:class:`Circuit` is generated for each subset by diagonalising the observables (reducing all of them to a combination of :math:`Z`-measurements).
+Given a set of observables, we can partition them into subsets that are easy to measure simultaneously. A :py:class:`~pytket.circuit.Circuit` is generated for each subset by diagonalising the observables (reducing all of them to a combination of :math:`Z`-measurements).
 
 .. Commuting sets vs non-conflicting sets
 
-Diagonalising a mutually commuting set of Pauli observables could require an arbitrary Clifford circuit in general. If we are considering the near-term regime where "every gate counts", the diagonalisation of the observables could introduce more of the (relatively) expensive two-qubit gates, giving us the speedup at the cost of some extra noise. ``pytket`` can partition the Pauli observables into either general commuting sets for improved reduction in the number of measurement :py:class:`Circuit` s, or into smaller sets which can be diagonalised without introducing any multi-qubit gates - this is possible when all observables are substrings of some measured Pauli string (e.g. `XYI` and `IYZ` is fine, but `ZZZ` and `XZX` is not).
+Diagonalising a mutually commuting set of Pauli observables could require an arbitrary Clifford circuit in general. If we are considering the near-term regime where "every gate counts", the diagonalisation of the observables could introduce more of the (relatively) expensive two-qubit gates, giving us the speedup at the cost of some extra noise. ``pytket`` can partition the Pauli observables into either general commuting sets for improved reduction in the number of measurement :py:class:`~pytket.circuit.Circuit` s, or into smaller sets which can be diagonalised without introducing any multi-qubit gates - this is possible when all observables are substrings of some measured Pauli string (e.g. `XYI` and `IYZ` is fine, but `ZZZ` and `XZX` is not).
 
 .. Could have multiple circuits producing the same observable, so can get extra shots/precision for free
 
-This measurement partitioning is built into the :py:meth:`get_operator_expectation_value` utility method, or can be used directly using :py:meth:`pytket.partition.measurement_reduction()` which builds a :py:class:`MeasurementSetup` object. A :py:class:`MeasurementSetup` contains a list of measurement :py:class:`Circuit` s and a map from the :py:class:`QubitPauliString` of each observable to the information required to extract the expectation value (which bits to consider from which :py:class:`Circuit`).
+This measurement partitioning is built into the :py:meth:`get_operator_expectation_value` utility method, or can be used directly using :py:meth:`pytket.partition.measurement_reduction()` which builds a :py:class:`MeasurementSetup` object. A :py:class:`MeasurementSetup` contains a list of measurement :py:class:`~pytket.circuit.Circuit` s and a map from the :py:class:`QubitPauliString` of each observable to the information required to extract the expectation value (which bits to consider from which :py:class:`~pytket.circuit.Circuit`).
 
 .. jupyter-execute::
 
@@ -968,7 +968,7 @@ This measurement partitioning is built into the :py:meth:`get_operator_expectati
         print(i, c.get_commands())
     print(setup.results[yy])
 
-.. note:: Since there could be multiple measurement :py:class:`Circuit` s generating the same observable, we could theoretically use this to extract extra shots (and hence extra precision) for that observable for free; automatically doing this as part of :py:meth:`measurement_reduction()` is planned for a future release of ``pytket``.
+.. note:: Since there could be multiple measurement :py:class:`~pytket.circuit.Circuit` s generating the same observable, we could theoretically use this to extract extra shots (and hence extra precision) for that observable for free; automatically doing this as part of :py:meth:`measurement_reduction()` is planned for a future release of ``pytket``.
 
 Contextual Optimisations
 ========================
@@ -1130,8 +1130,8 @@ introduced by :py:meth:`SimplifyMeasured` or (possibly)
 :py:meth:`SimplifyInitial`. So pytket provides a method
 :py:meth:`separate_classical` to separate the classical postprocessing circuit
 from the main circuit to be run on the device. This postprocessing circuit is
-then passed as the ``ppcirc`` argument to :py:meth:`BackendResult.get_counts` or
-:py:meth:`BackendResult.get_shots`, in order to obtain the postprocessed
+then passed as the ``ppcirc`` argument to :py:meth:`~pytket.backends.BackendResult.get_counts` or
+:py:meth:`~pytket.backends.BackendResult.get_shots`, in order to obtain the postprocessed
 results.
 
 Much of the above is wrapped up in the utility method

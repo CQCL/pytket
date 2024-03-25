@@ -43,10 +43,10 @@ vary over time, a phenomenon commonly referred to as device drift
 [White2019]_.
 
 Some devices expose error characterisation information through
-their programming interface. When available, :py:class:`Backend`
-objects will populate a :py:class:`BackendInfo` object with this information. 
+their programming interface. When available, :py:class:`~pytket.backends.Backend`
+objects will populate a :py:class:`~pytket.backends.backendinfo.BackendInfo` object with this information. 
 
-A :py:class:`BackendInfo` object contains a variety of characterisation information supplied by hardware providers.   
+A :py:class:`~pytket.backends.backendinfo.BackendInfo` object contains a variety of characterisation information supplied by hardware providers.   
 Some information, including gate error rates, is stored in attributes with specific names.
 
 
@@ -65,7 +65,7 @@ Some information, including gate error rates, is stored in attributes with speci
     node[3]: 0.00015814094160059136, 
     node[4]: 0.00013411930305754117}    
 
-Other miscellaneous information, varying between backends, is stored in the `misc` attribute, also accessible through the :py:meth:`BackendInfo.get_misc` method.
+Other miscellaneous information, varying between backends, is stored in the `misc` attribute, also accessible through the :py:meth:`~pytket.backends.BackendInfo.get_misc` method.
 
 .. jupyter-input::
 
@@ -122,14 +122,14 @@ made in both phases, by prioritising edges with lower error rates.
 .. Noise-Aware placement is effective
 
 The class :py:class:`NoiseAwarePlacement` uses characteristics stored in
-:py:class:`BackendInfo` to find an initial placement of logical qubits on
+:py:class:`~pytket.backends.backendinfo.BackendInfo` to find an initial placement of logical qubits on
 physical qubits which minimises the error accrued during a circuit's
 execution.  It achieves this by minimising the additional
 ``OpType.SWAP`` overhead to route circuits, as in conventional
 placement, and at the same time avoiding qubits with worse error
 rates. Further information on this method is available in section 7.1
 of our `software overview paper
-<https://doi.org/10.1088/2058-9565/ab8e92>`_.
+<https://iopscience.iop.org/article/10.1088/2058-9565/ab8e92>`_.
 
 .. jupyter-input::
 
@@ -494,7 +494,7 @@ First the :py:class:`SpamCorrecter` is characterised using counts results for ca
     print('Noiseless Counts:', noiseless_result.get_counts())
 
 
-Despite the presence of additional noise, it is straightforward to see that the corrected counts results are closer to the expected noiseless counts than the original noisy counts. All that is required to use :py:class:`SpamCorrecter` with a real device is the interchange of :py:class:`AerBackend` with a real device backend, such as  :py:class:`IBMQBackend`.
+Despite the presence of additional noise, it is straightforward to see that the corrected counts results are closer to the expected noiseless counts than the original noisy counts. All that is required to use :py:class:`SpamCorrecter` with a real device is the interchange of :py:class:`~pytket.extensions.qiskit.AerBackend` with a real device backend, such as  :py:class:`~pytket.extensions.qiskit.IBMQBackend`.
 
 
 
