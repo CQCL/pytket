@@ -4,29 +4,28 @@ Circuit Construction
 
 .. Open DAG; equivalence up to trivial commutations/topological orderings
 
-The :py:class:`Circuit` class forms the unit of computation that we can send off to a quantum co-processor. Each instruction is to be performed in order, potentially parallelising when they use disjoint sets of (qu)bits. To capture this freedom of parallelisation, we treat the circuit as a Directed Acyclic Graph with a vertex for each instruction and directed edges following the paths of resources (e.g. qubits and bits) between them. This DAG representation describes the abstract circuit ignoring these trivial commutations/parallel instructions.
+A quantum circuit acts as the foundation for creating quantum algorithms. Within the `pytket` library, the :py:class:`Circuit` class serves as the fundamental component for constructing computations that are executable on a quantum co-processor. Each instruction within the circuit is executed sequentially, with the possibility of running instructions in parallel if they operate on separate sets of qubits and (classical) bits. To utilize the potential for parallel execution, the circuit is represented internally as a Directed Acyclic Graph (DAG), with each operation forming a node and the movement of qubits and bits illustrated by connecting arrows (directed edges). This DAG layout provides an abstract view of the circuit, effectively managing the nuances of operation reordering and parallel actions.
 
 .. Abstract computational model and semantics - map on combined quantum/classical state space
 
-In general, we consider :py:class:`Circuit` instances to represent open circuits; that is, they can be used within arbitrary contexts, so any input state can be supplied and there is no assumption on how the output state should be used. In practice, when we send a :py:class:`Circuit` off to be executed, it will be run with all qubits in the initial state :math:`|0\rangle^{\otimes n}` and all bits set to :math:`0`, then the classical outputs returned and the quantum state discarded.
+In `pytket`, the :py:class:`Circuit` class creates flexible circuits that work with any input states and have outputs that can be used in various ways. In practice and by default in `pytket`, :py:class:`Circuit` execute with qubits initialized to the zero state :math:`|0\rangle^{\otimes n}` and bits set to :math:`0`. After execution, `pytket` provides classical data from the quantum measurements and resets the quantum state.
 
-Each circuit can be represented as a POVM on the combined quantum/classical state space by composing the representations assigned to each basic instruction. However, many use cases will live predominantly in the pure quantum space where the operations are simply unitaries acting on the quantum state. One practical distinction between these cases is the relevance of global phase: something that cannot be identified at the POVM level but has importance for pure states as it affects how we interpret the system and has an observable difference when the system is then coherently controlled. For example, an Rz gate and a U1 gate give equivalent effects on the quantum state but have a different global phase, meaning their unitaries *look* different, and a controlled-Rz is different from a controlled-U1. A :py:class:`Circuit` will track global phase to make working with pure quantum processes easier, though this becomes meaningless once measurements and other classical interaction are applied and has no impact on the instructions sent to a quantum device when we eventually run it.
+Quantum circuits can be examined through two lenses: Positive Operator-Valued Measures (POVMs), encompassing quantum and classical information, and quantum operations, focusing on unitary transformations. POVMs offer insights into quantum states and measurement outcomes, but unitary operations are key for manipulating quantum states. A significant concept here is the global phase, which is crucial for understanding pure states and is observable when the system is coherently controlled. However, it is indistinguishable at the POVM level. For example, an Rz gate and a U1 gate give equivalent effects on the quantum state but have a different global phase, meaning their unitaries *look* different, and a controlled-Rz is different from a controlled-U1. A :py:class:`Circuit` will track global phase to make working with pure quantum processes easier. However, this becomes meaningless once measurements and other classical interactions are applied and have no impact on the instructions sent to a quantum device when we eventually run it.
 
-.. There is no strict notion of control-flow or branching computation within a :py:class:`Circuit`, meaning there is no facility to consider looping or arbitrary computation trees. This is likely to be an engineering limitation of all quantum devices produced in the near future, but this does not sacrifice the ability to do meaningful and interesting computation.
+.. There is no strict notion of control-flow or branching computation within a :py:class:`Circuit`, meaning there is no facility to consider looping or arbitrary computation trees. This is likely to be an engineering limitation of all quantum devices produced in the near future, but this does not sacrifice the ability to do meaningful and interesting computations.
 
 .. Resource linearity - no intermediate allocation/disposal of (qu)bits
 .. Constructors (for integer-indexing)
 
-Given the small scale and lack of dynamic quantum memories for both devices and simulations, we assume each qubit and bit is statically registered and hence each :py:class:`Circuit` has the same number of inputs as outputs. The set of data units (qubits and bits) used by the :py:class:`Circuit` is hence going to be constant, so we can define it up-front when we construct one. We can also optionally give it a name for easy identification.
+Given the constraints of today's quantum devices, characterized by a limited number of qubits and static memory allocation, `pytket`'s :py:class:`Circuit` class is designed to work within these bounds by predefining the number of qubits and bits used. This setup means the number of inputs and outputs in a circuit is predefined and unchanging. Upon creation, each circuit's configuration is specified, and circuits can also be named for easier management in larger projects.  This process is illustrated in the following examples of initializing circuits in `pytket`:
 
 .. jupyter-execute::
-
     from pytket import Circuit
 
-    trivial_circ = Circuit()        # no qubits or bits
-    quantum_circ = Circuit(4)       # 4 qubits and no bits
-    mixed_circ   = Circuit(4, 2)    # 4 qubits and 2 bits
-    named_circ   = Circuit(2, 2, "my_circ")
+    trivial_circ = Circuit()                    # A circuit without qubits or bits
+    quantum_circ = Circuit(4)                   # A circuit with 4 qubits
+    mixed_circ = Circuit(4, 2)                  # A circuit with 4 qubits and 2 bits
+    named_circ = Circuit(2, 2, "my_circ")       # A named circuit with 2 qubits and 2 bits
 
 Basic Gates
 -----------
