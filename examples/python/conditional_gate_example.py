@@ -72,9 +72,9 @@ circ2.add_bit(success)
 
 # Try the X gate:
 
-circ2.add_circbox(x_box, args=[target, ancilla, success])
+circ2.add_gate(x_box, args=[target, ancilla, success])
 # Try again if the X failed
-circ2.add_circbox(
+circ2.add_gate(
     x_box, args=[target, ancilla, success], condition_bits=[success], condition_value=0
 )
 render_circuit_jupyter(circ2)

@@ -379,13 +379,13 @@ We can use :py:meth:`auto_rebase_pass` to create a pass that can be applied to a
     circ = Circuit(4)
     circ.X(0)
     circ.X(1)
-    circ.add_pauliexpbox(
+    circ.add_gate(
         PauliExpBox([Pauli.X, Pauli.Z, Pauli.Y, Pauli.I], 0.034), [0, 1, 2, 3]
     )
-    circ.add_pauliexpbox(
+    circ.add_gate(
         PauliExpBox([Pauli.Y, Pauli.Z, Pauli.X, Pauli.I], -0.2), [0, 1, 2, 3]
     )
-    circ.add_pauliexpbox(
+    circ.add_gate(
         PauliExpBox([Pauli.I, Pauli.X, Pauli.Z, Pauli.Y], 0.45), [0, 1, 2, 3]
     )
 

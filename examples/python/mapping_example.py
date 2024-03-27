@@ -484,7 +484,7 @@ qubit_indices = {Qubit(0): 0, Qubit(1): 1, Qubit(2): 2}
 phase_polynomial = {(True, False, True): 0.333, (False, False, True): 0.05}
 linear_transformation = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 p_box = PhasePolyBox(n_qb, qubit_indices, phase_polynomial, linear_transformation)
-c.add_phasepolybox(p_box, [0, 1, 2])
+c.add_gate(p_box, [0, 1, 2])
 c.CX(0, 1).CX(0, 2).CX(1, 2)
 display.render_circuit_jupyter(c)
 nodes = [Node("test", 0), Node("test", 1), Node("test", 2)]

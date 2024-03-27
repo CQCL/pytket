@@ -599,7 +599,7 @@ Now that we've built our circuit we can wrap it up in a :py:class:`CircBox` and 
     oracle_box = CircBox(oracle_circ)
     circ = Circuit(3)
     circ.H(0).H(1).H(2)
-    circ.add_circbox(oracle_box, [0, 1, 2])
+    circ.add_gate(oracle_box, [0, 1, 2])
 
     render_circuit_jupyter(circ)
 
@@ -660,11 +660,11 @@ If our subcircuit is a pure quantum circuit (i.e. it corresponds to a unitary op
     cont = QControlBox(sub_box, 2)
 
     circ = Circuit(4)
-    circ.add_circbox(sub_box, [2, 3])
+    circ.add_gate(sub_box, [2, 3])
     circ.Ry(0.3, 0).Ry(0.8, 1)
 
     # Add to circuit with controls q[0], q[1], and targets q[2], q[3]
-    circ.add_qcontrolbox(cont, [0, 1, 2, 3])
+    circ.add_gate(cont, [0, 1, 2, 3])
 
 As well as creating controlled boxes, we can create a controlled version of an arbitrary :py:class:`Op` as follows.
 
@@ -741,7 +741,7 @@ These occur very naturally in Trotterising evolution operators and native device
 
     pauli_circ = Circuit(4)
 
-    pauli_circ.add_pauliexpbox(xyyz, [0, 1, 2, 3])
+    pauli_circ.add_gate(xyyz, [0, 1, 2, 3])
     render_circuit_jupyter(pauli_circ)
 
 To understand what happens inside a :py:class:`PauliExpBox` let's take a look at the underlying circuit for :math:`e^{-i \frac{\pi}{2}\theta XYYZ}`
@@ -806,7 +806,7 @@ Finally a ``linear_transfromation`` parameter needs to be specified:  this is a 
 
     p_box = PhasePolyBox(n_qb, qubit_indices, phase_polynomial, linear_transformation)
 
-    phase_poly_circ.add_phasepolybox(p_box, [0, 1, 2])
+    phase_poly_circ.add_gate(p_box, [0, 1, 2])
 
     render_circuit_jupyter(p_box.get_circuit())
 
@@ -841,7 +841,7 @@ Lets implement a multiplexor with the following logic. Here we treat the first t
 
     multi_circ = Circuit(3)
     multi_circ.X(0).X(1)  # Put both control qubits in the state |1>
-    multi_circ.add_multiplexor(multiplexor, [0, 1, 2])
+    multi_circ.add_gate(multiplexor, [0, 1, 2])
 
     render_circuit_jupyter(multi_circ)
 
@@ -899,7 +899,7 @@ To demonstrate :py:class:`StatePreparationBox` let's use it to prepare the W sta
     w_state_box = StatePreparationBox(w_state)
 
     state_circ = Circuit(3)
-    state_circ.add_state_preparation_box(w_state_box, [0, 1, 2])
+    state_circ.add_gate(w_state_box, [0, 1, 2])
 
 
 .. jupyter-execute::
@@ -962,7 +962,7 @@ Finally let's append the :py:class:`ToffoliBox` onto our circuit preparing our w
 
 .. jupyter-execute::
 
-    state_circ.add_toffolibox(perm_box, [0, 1, 2])
+    state_circ.add_gate(perm_box, [0, 1, 2])
     render_circuit_jupyter(state_circ)
 
 .. jupyter-execute::
@@ -987,7 +987,7 @@ Importing/Exporting Circuits
     circ = Circuit(2)
     circ.Rx(0.1, 0)
     circ.CX(0, 1)
-    circ.add_gate(OpType.YYPhase, 0.2, [0, 1])
+    circ.YYPhase(0.2, 0, 1)
 
     circ_dict = circ.to_dict()
     print(circ_dict)
@@ -1531,7 +1531,7 @@ To add gates or boxes to a circuit with specified op group names, simply pass th
     circ.H(2, opgroup="special one")
     circ.CX(2, 1)
     cbox = CircBox(Circuit(2).S(0).CY(0,1))
-    circ.add_circbox(cbox, [0,1], opgroup="Fred")
+    circ.add_gate(cbox, [0,1], opgroup="Fred")
     circ.CX(1, 2, opgroup="Fred")
 
     print(circ.get_commands())
@@ -1577,11 +1577,11 @@ To add a control to an operation, one can add the original operation as a :py:cl
     cx_0_cbox = with_empty_qubit(cx_op)
     cx_q_qbox = with_control_qubit(cx_op)
     c.X(0).Y(1)
-    c.add_circbox(h_0_cbox, [2, 0], opgroup="hgroup")
-    c.add_circbox(cx_0_cbox, [2, 0, 1], opgroup="cxgroup")
+    c.add_gate(h_0_cbox, [2, 0], opgroup="hgroup")
+    c.add_gate(cx_0_cbox, [2, 0, 1], opgroup="cxgroup")
     c.Y(0).X(1)
-    c.add_circbox(h_0_cbox, [2, 1], opgroup="hgroup")
-    c.add_circbox(cx_0_cbox, [2, 1, 0], opgroup="cxgroup")
+    c.add_gate(h_0_cbox, [2, 1], opgroup="hgroup")
+    c.add_gate(cx_0_cbox, [2, 1, 0], opgroup="cxgroup")
     c.X(0).Y(1)
     c.substitute_named(h_q_qbox, "hgroup")
     c.substitute_named(cx_q_qbox, "cxgroup")

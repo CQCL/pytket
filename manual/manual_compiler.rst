@@ -370,9 +370,9 @@ The numerous Box structures in ``pytket`` provide practical abstractions for hig
     sub_box = CircBox(sub)
     circ = Circuit(4)
     circ.Rx(0.42, 2).CX(2, 0)
-    circ.add_circbox(sub_box, [0, 1])
-    circ.add_circbox(sub_box, [2, 3])
-    circ.add_pauliexpbox(PauliExpBox([Pauli.X, Pauli.Y, Pauli.Y, Pauli.Y], 0.2), [0, 1, 2, 3])
+    circ.add_gate(sub_box, [0, 1])
+    circ.add_gate(sub_box, [2, 3])
+    circ.add_gate(PauliExpBox([Pauli.X, Pauli.Y, Pauli.Y, Pauli.Y], 0.2), [0, 1, 2, 3])
 
     DecomposeBoxes().apply(circ)
     print(circ.get_commands())
@@ -495,7 +495,7 @@ Some of these optimisation passes have optional parameters to customise the rout
     from pytket.utils import Graph
 
     circ = Circuit(8)
-    circ.add_pauliexpbox(PauliExpBox([Pauli.X, Pauli.Y, Pauli.X, Pauli.Z, Pauli.Y, Pauli.X, Pauli.Z, Pauli.Z], 0.42), [0, 1, 2, 3, 4, 5, 6, 7])
+    circ.add_gate(PauliExpBox([Pauli.X, Pauli.Y, Pauli.X, Pauli.Z, Pauli.Y, Pauli.X, Pauli.Z, Pauli.Z], 0.42), [0, 1, 2, 3, 4, 5, 6, 7])
 
     PauliSimp(cx_config=CXConfigType.Snake).apply(circ)
     print(circ.get_commands())

@@ -184,7 +184,7 @@ def add_excitation(circ, term_dict, param):
     for term, coeff in term_dict.items():
         qubits, paulis = zip(*term.map.items())
         pbox = PauliExpBox(paulis, coeff * param)
-        circ.add_pauliexpbox(pbox, qubits)
+        circ.add_gate(pbox, qubits)
 
 
 # UCC ansatz with syntactic shortcuts:
